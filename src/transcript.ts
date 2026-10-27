@@ -32,9 +32,10 @@ class Activity extends Container {
     const tools = this.entries.filter(e => e.kind === "tool").length;
     const time = this.active ? this.elapsed + this.now() - this.started : this.elapsed;
     const duration = time > 0 ? ` · ${(time / 1000).toFixed(1)}s` : "";
-    const label = `${this.expanded ? "▾" : "▸"} ${this.active ? "Working" : "Worked"}${duration} · ${thoughts} thinking · ${tools} tools`;
+    const marker = this.theme.bold(this.theme.fg("accent", this.expanded ? "▼" : "▶"));
+    const label = `${this.active ? "Working" : "Worked"}${duration} · ${thoughts} thinking · ${tools} tools`;
     const header: Component = {
-      render: w => [this.theme.fg("muted", truncateToWidth(label, w))],
+      render: w => [truncateToWidth(`${marker} ${this.theme.fg("muted", label)}`, w)],
       invalidate() {},
     };
     this.children = [new Spacer(1), new MouseRegion(header, event => {

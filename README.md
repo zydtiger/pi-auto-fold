@@ -5,11 +5,11 @@ fold that activity into a clickable summary and keep assistant text visible.
 
 ```text
 Your prompt
-▸ Worked · 12.4s · 3 thinking · 5 tools
+▶ Worked · 12.4s · 3 thinking · 5 tools
 Final answer
 
 Next prompt
-▾ Working · 2.1s · 1 thinking · 2 tools
+▼ Working · 2.1s · 1 thinking · 2 tools
   Live thinking and tool output…
 ```
 
