@@ -33,7 +33,7 @@ function setup() {
   return { source, assistant, tool, transcript, tick: () => { clock += 1400; } };
 }
 
-test("live activity is expanded, settles to one disclosure, text and message data survive", () => {
+test("live activity opens, settles to one disclosure, text and message data survive", () => {
   const s = setup();
   const original = JSON.stringify(Reflect.get(s.assistant, "lastMessage"));
   s.transcript.begin();
@@ -134,7 +134,7 @@ test("bridge restores native display, rejects unsupported layouts and double mou
   assert.equal(mount(fakeTui(), create), undefined);
 });
 
-test("unknown nodes stay visible and disappearing tools restore expansion", () => {
+test("unknown nodes stay visible and disappearing tools retain expansion", () => {
   const s = setup();
   s.source.addChild(new Text("unknown notice", 0, 0));
   s.transcript.begin(); assert.match(output(s.transcript), /unknown notice/);
@@ -142,4 +142,42 @@ test("unknown nodes stay visible and disappearing tools restore expansion", () =
   output(s.transcript);
   assert.equal(Reflect.get(s.tool, "expanded"), false);
   s.transcript.dispose();
+});
+
+test("activity disclosure preserves configured tool rendering and user expansion in both phases", () => {
+  const s = setup();
+  let mode = "balanced";
+  const tool = new ToolExecutionComponent("bash", "configured", { command: "echo test" }, undefined, {
+    renderCall: () => new Text("bash echo test", 0, 0),
+    renderResult: (_result, options) => new Text(options.expanded ? "full tool output"
+      : `${mode} tool summary`, 0, 0),
+  }, fakeTui(), process.cwd());
+  tool.markExecutionStarted();
+  const result = { content: [{ type: "text", text: "full tool output" }], isError: false };
+  tool.updateResult(result);
+  s.source.children[1] = tool;
+  const setExpanded = tool.setExpanded.bind(tool);
+  let writes = 0;
+  tool.setExpanded = value => { writes++; setExpanded(value); };
+  s.transcript.begin();
+  assert.match(output(s.transcript), /secret reasoning/);
+  assert.match(output(s.transcript), /balanced tool summary/);
+  assert.doesNotMatch(output(s.transcript), /full tool output/);
+  s.transcript.finish();
+  assert.doesNotMatch(output(s.transcript), /balanced tool summary|secret reasoning/);
+  s.transcript.toggleLatest();
+  assert.match(output(s.transcript), /secret reasoning/);
+  assert.match(output(s.transcript), /balanced tool summary/);
+  mode = "opencode";
+  tool.updateResult(result);
+  assert.match(output(s.transcript), /opencode tool summary/);
+  // Native Ctrl+O or a tool click still owns the tool's expansion state.
+  tool.setExpanded(true);
+  assert.match(output(s.transcript), /full tool output/);
+  s.transcript.toggleLatest(); output(s.transcript);
+  s.transcript.toggleLatest();
+  assert.match(output(s.transcript), /full tool output/);
+  s.transcript.dispose();
+  assert.equal(writes, 1);
+  assert.equal(Reflect.get(tool, "expanded"), true);
 });

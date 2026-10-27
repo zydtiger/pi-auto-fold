@@ -1,6 +1,6 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { Container, MouseRegion, Spacer, truncateToWidth, type Component } from "@earendil-works/pi-tui";
-import type { Entry, NativeTool, Projection } from "./bridge.ts";
+import type { Entry, Projection } from "./bridge.ts";
 
 class Activity extends Container {
   entries: Entry[] = [];
@@ -52,7 +52,6 @@ class Activity extends Container {
 /** Per-prompt groups retain their own disclosure state when another prompt starts. */
 export class Transcript extends Container implements Projection {
   private groups = new Map<object, Activity>();
-  private toolStates = new Map<NativeTool, boolean>();
   private running = false;
   private timer?: ReturnType<typeof setInterval>;
   private disposed = false;
@@ -98,11 +97,6 @@ export class Transcript extends Container implements Projection {
       if (!group) this.groups.set(key, group = new Activity(this.theme, this.redraw, this.now));
       group.update(body, this.running && key === (latestUser ?? this));
       retained.add(key);
-      if (group.expanded) for (const entry of body) if (entry.tool) {
-        const tool = entry.tool;
-        if (!this.toolStates.has(tool)) this.toolStates.set(tool, tool.expanded);
-        if (!tool.expanded) tool.setExpanded(true);
-      }
       children.push(group);
       body = [];
     };
@@ -115,11 +109,6 @@ export class Transcript extends Container implements Projection {
     }
     flush();
     for (const key of this.groups.keys()) if (!retained.has(key)) this.groups.delete(key);
-    const currentTools = new Set(entries.flatMap(e => e.tool ? [e.tool] : []));
-    for (const [tool, expanded] of this.toolStates) if (!currentTools.has(tool)) {
-      tool.setExpanded(expanded);
-      this.toolStates.delete(tool);
-    }
     this.children = children;
     return super.render(width);
   }
@@ -128,8 +117,6 @@ export class Transcript extends Container implements Projection {
     if (this.disposed) return;
     this.disposed = true;
     clearInterval(this.timer);
-    for (const [tool, expanded] of this.toolStates) tool.setExpanded(expanded);
-    this.toolStates.clear();
     this.groups.clear();
   }
 }

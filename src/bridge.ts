@@ -11,27 +11,23 @@ type NativeAssistant = Component & {
   markdownTransformers: NonNullable<Options[5]>;
   contentContainer: Container;
 };
-export type NativeTool = Component & {
+type NativeTool = Component & {
   toolCallId: string;
   toolName: string;
-  expanded: boolean;
-  setExpanded(expanded: boolean): void;
 };
 export type Entry = {
   key: object;
   kind: "user" | "thinking" | "tool" | "content";
   component: Component;
-  tool?: NativeTool;
 };
 
 function isContainer(value: unknown): value is Container {
   return value instanceof Container;
 }
 
-export function isTool(value: Component): value is NativeTool {
+function isTool(value: Component): value is NativeTool {
   const node = value as Partial<NativeTool>;
-  return typeof node.toolCallId === "string" && typeof node.toolName === "string"
-    && typeof node.expanded === "boolean" && typeof node.setExpanded === "function";
+  return typeof node.toolCallId === "string" && typeof node.toolName === "string";
 }
 
 /** Split display copies only. Original messages and native mutation targets remain intact. */
@@ -41,7 +37,7 @@ export class EntryReader {
 
   read(node: Component): Entry[] {
     if (node instanceof UserMessageComponent) return [{ key: node, kind: "user", component: node }];
-    if (isTool(node)) return [{ key: node, kind: "tool", component: node, tool: node }];
+    if (isTool(node)) return [{ key: node, kind: "tool", component: node }];
     if (!(node instanceof AssistantMessageComponent)) return [{ key: node, kind: "content", component: node }];
     // Pi exposes the class but not these fields. Guard this single private boundary.
     const native = node as unknown as NativeAssistant;

@@ -1,6 +1,6 @@
 # pi-auto-fold
 
-Watch thinking and full tool output while Pi works. Once the prompt finishes,
+Watch thinking and your configured tool display while Pi works. Once the prompt finishes,
 fold that activity into a clickable summary and keep assistant text visible.
 
 ```text
@@ -28,15 +28,16 @@ when its prompt finishes, including if you opened it manually while working.
 
 ## Behavior
 
-- Live activity opens automatically. Tools use their original renderers with
-  full output enabled, including renderers from `pi-tool-display`.
+- Live activity opens automatically and shows full thinking. Tools keep their
+  original renderers and expansion state, including your `pi-tool-display`
+  preset (such as `balanced`). Reopening completed activity does the same.
 - Automatic retries and tool/model loops stay expanded until `agent_settled`.
   A new user message starts a new group, including queued prompts and steering.
 - Thinking and tool rows fold together. Assistant prose, errors, compaction
   notices, and unknown components remain visible. Failed tool results are
   available by expanding the activity group.
-- No session messages or provider context are changed. Unloading restores the
-  native transcript and the tools' original expansion settings.
+- No session messages, provider context, or tool expansion settings are changed.
+  Unloading restores the native transcript.
 - The guarded bridge targets Pi 1.4's private document layout. Unsupported
   layouts keep Pi's native display and show a warning. Regular scrollback,
   print, and RPC modes are not modified. Use one transcript projection plugin
@@ -44,8 +45,8 @@ when its prompt finishes, including if you opened it manually while working.
 
 The timer measures time observed in the current session; historical groups
 have counts but no reconstructed duration. Ctrl+O and Ctrl+T remain native
-Pi controls; this plugin uses its own group disclosure and shows full activity
-inside an expanded group.
+Pi controls; this plugin uses its own group disclosure, shows full thinking,
+and leaves tool presentation to Pi and your renderer extensions.
 
 ## Development
 
